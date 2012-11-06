@@ -47,7 +47,8 @@ POPULAR_PORTS = {
 	"547" :	"DHCP Server",
 	"563" :	"SNEWS",
 	"569" :	"MSN",
-	"1080" :	"Socks"
+	"1080" :	"Socks",
+	"1337": "unknown"
 };
 
 var net = require('net');
@@ -70,29 +71,23 @@ var PORTS = (function() {
 OPEN_PORTS = [];
 CLOSED_PORTS = [];
 
-// scan each port in the list
-PORTS.forEach(scanPort);
-
-function scanPort(port) {
-	console.log("Scanning: " + port);
+PORTS.forEach(function scanPort(port) {
+	//console.log("Scanning: " + port);
 		try {
-			net.connect(port, argv._, onPortOpen).on('error', onPortClosed);
+			net.connect(port, argv._, function onPortOpen() {
+				this.destroy();	
+
+				// Add the port to the list of open ports
+				OPEN_PORTS += port;
+
+				// get the port description
+				var description = POPULAR_PORTS[port] || "unknown";
+
+				console.log(argv._ + ":" + port + " open (" + description + ")");
+			}).on('error', function onPortClosed() {
+				CLOSED_PORTS += port;
+			});
 	} catch(e) {
 		console.log(e);
 	}
-}
-
-function onPortOpen(one, two) {
-	console.log(one);
-	console.log(two);
-		OPEN_PORTS+=port;
-		console.log(POPULAR_PORTS[port]);
-		var description = POPULAR_PORTS[port] || "unknown";
-		console.log(description);
-		console.log(argv._ + ":" + port + " open (" + description + ")");
-		this.destroy();	
-}
-
-function onPortClosed() {
-	CLOSED_PORTS+=port;
-}
+});
